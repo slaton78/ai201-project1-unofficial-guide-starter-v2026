@@ -8,8 +8,6 @@ import { CampusEmblem } from '@/components/CampusEmblem';
 import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { CAMPUSES, DEFAULT_CAMPUS_ID, getCampus } from '@/content/campuses';
-import { analytics } from '@/services/analytics';
-import { triggerHaptic } from '@/services/haptics';
 import { useGameStore } from '@/store/gameStore';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -26,10 +24,6 @@ export default function CampusSelectScreen() {
     setBusy(true);
     try {
       await selectCampus(selected);
-      analytics.track('campus_selected', {
-        campus_id: selected,
-        source: fromSettings ? 'settings' : 'onboarding',
-      });
       if (fromSettings && router.canGoBack()) router.back();
       else router.replace('/trail');
     } finally {
@@ -62,10 +56,7 @@ export default function CampusSelectScreen() {
               accessibilityRole="radio"
               accessibilityState={{ checked: isSelected }}
               accessibilityLabel={`${campus.name}. ${campus.description}`}
-              onPress={() => {
-                setSelected(campus.id);
-                triggerHaptic('selection');
-              }}
+              onPress={() => setSelected(campus.id)}
               style={[
                 styles.card,
                 {

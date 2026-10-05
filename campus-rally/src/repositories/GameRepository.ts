@@ -5,7 +5,7 @@ import type { GameSave } from '@/types/save';
  * implementation can later be swapped for (or combined with) a Supabase-backed one.
  */
 export interface GameRepository {
-  readonly kind: 'local' | 'supabase';
+  readonly kind: 'local' | 'remote';
   /** Loads the save, migrating older formats. Never rejects for corrupt data. */
   load(): Promise<GameSave>;
   /** Persists the full save. Writes are serialized in call order. */

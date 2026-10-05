@@ -1,7 +1,8 @@
 # ADR-001: Run Phaser inside a WebView behind a typed message bridge
 
-- **Status:** Accepted (MVP)
+- **Status:** Accepted — design only. Implementation is scheduled for Phase B; no Phaser or WebView code exists in the Phase A build.
 - **Date:** 2026-10-05
+- **Note:** File paths and message names below describe the planned Phase B implementation.
 
 ## Context
 

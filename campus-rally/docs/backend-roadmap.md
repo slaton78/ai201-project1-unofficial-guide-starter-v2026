@@ -1,11 +1,11 @@
 # Backend roadmap (future — nothing here is implemented or configured)
 
-The MVP is **local-only**. No Supabase project, PostHog project, or Sentry project exists for this app. `SupabaseGameRepository` is a stub whose methods reject. This document is the plan.
+The app is **local-only**. No Supabase, PostHog, or Sentry project exists for it, and no backend code is in the repository. Persistence goes through the `GameRepository` interface (`src/repositories/GameRepository.ts`), so a remote implementation can be added behind `createGameRepository()` later. This document is the plan.
 
 ## Principles
 
 - **Local-first**: the game must stay fully playable offline. Remote sync is additive.
-- The client only ever holds the **publishable (anon) key**. The **service-role key never ships in the app**; `src/lib/env.ts` refuses keys that look like service-role/secret keys.
+- The client only ever holds the **publishable (anon) key**. The **service-role key never ships in the app**. When env reading is added, it should refuse values that look like service-role/secret keys (JWT with `role: service_role`, or `sb_secret_…`).
 - **The server is the authority for progression.** Clients submit attempts; an Edge Function validates and writes progress.
 - Collect the minimum data needed (see the analytics taxonomy in `architecture.md`).
 
@@ -89,18 +89,18 @@ create table event_configuration (           -- remote config / feature flags
 4. Insert the attempt with `verified_score`, then upsert `player_progress` (best stars/score, unlock next level) in one transaction.
 5. Return the authoritative progress; the client reconciles its local save.
 
-To support replay, the client will need to record `{seed, moves[]}` per attempt (the `GameSession` API already takes a seed and is deterministic).
+To support replay, the client will need to record `{seed, moves[]}` per attempt (the planned game core uses a seeded, deterministic RNG for this reason).
 
 ## Client integration steps
 
 1. `npx expo install @supabase/supabase-js` and use AsyncStorage for the auth session.
-2. Implement `SupabaseGameRepository` (load → profiles + player_progress; save → queue attempts to the Edge Function).
+2. Add `SupabaseGameRepository implements GameRepository` (load → profiles + player_progress; save → queue attempts to the Edge Function).
 3. Add a `SyncingGameRepository` that writes locally first and syncs in the background, resolving conflicts by max(stars/best score) and server truth for unlocks.
 4. Map `GameSave` ↔ tables (the local types already mirror these columns).
 
 ## Analytics, crash reporting, flags
 
-- **PostHog**: install `posthog-react-native`, implement `AnalyticsClient` in `src/services/analytics.ts` only when `EXPO_PUBLIC_POSTHOG_KEY` is set and the player has consented. Disable autocapture and session replay; send only the typed events.
-- **Sentry**: install `@sentry/react-native` with its Expo config plugin; implement `ErrorReporter`. Scrub breadcrumbs; no PII.
+- **PostHog**: install `posthog-react-native`, add a typed analytics wrapper (no-op by default) and enable it only when `EXPO_PUBLIC_POSTHOG_KEY` is set and the player has consented. Disable autocapture and session replay; send only the typed events.
+- **Sentry**: install `@sentry/react-native` with its Expo config plugin; replace `src/lib/logger.ts` with an error-reporting wrapper. Scrub breadcrumbs; no PII.
 - **Feature flags**: read from `event_configuration` (or PostHog flags) with local defaults so the game works offline.
-- **Push notifications / RevenueCat**: interfaces exist in `src/services/notifications.ts` and `purchases.ts`. Neither is implemented; any future purchases must be cosmetic only, never chance-based.
+- **Push notifications / RevenueCat**: not in scope for the prototype; interfaces only when they are scheduled; any future purchases must be cosmetic only, never chance-based.

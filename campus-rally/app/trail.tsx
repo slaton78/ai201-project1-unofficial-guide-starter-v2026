@@ -1,34 +1,24 @@
-import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
-import { Button } from '@/components/Button';
 import { CampusEmblem } from '@/components/CampusEmblem';
 import { Icon } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
-import { Stars } from '@/components/Stars';
+import { StarIcon, Stars } from '@/components/Stars';
 import { getCampus } from '@/content/campuses';
-import { LEVEL_ORDER, LEVELS } from '@/content/levels';
-import { dailyPractice } from '@/features/progression/daily';
-import {
-  completedCount,
-  currentLevelId,
-  getProgress,
-  isLevelUnlocked,
-  totalStars,
-  visibleStreak,
-} from '@/features/progression/progression';
-import { analytics } from '@/services/analytics';
+import { LEVEL_ORDER, TRAIL_STOPS } from '@/content/trail';
+import { currentLevelId, getProgress, isLevelUnlocked, totalStars } from '@/features/progression/progression';
 import { useGameStore } from '@/store/gameStore';
 import { radius, spacing, useTheme } from '@/theme';
 
 const NODE_SIZE = 76;
+const LABEL_WIDTH = 160;
 /** Horizontal offsets (-1..1 of the available swing) that make the trail wind back and forth. */
 const WIND = [0, 0.65, 1, 0.65, 0, -0.65, -1, -0.65];
-const LABEL_WIDTH = 160;
 
+/** Championship Trail shell: lock state and stars come from the local save. */
 export default function TrailScreen() {
   const save = useGameStore((s) => s.save);
   const { palette, borderWidth } = useTheme();
@@ -37,43 +27,28 @@ export default function TrailScreen() {
   const campus = getCampus(save.playerProfile.selectedCampusId);
   const stars = totalStars(save);
   const current = currentLevelId(save, LEVEL_ORDER);
-  const today = useMemo(() => new Date(), []);
-  const daily = dailyPractice(save, LEVEL_ORDER, today);
-  const streak = visibleStreak(save, today);
-  const dailyDone = save.lastDailyChallengeDate === daily.dateKey;
-
-  useFocusEffect(
-    useCallback(() => {
-      const s = useGameStore.getState().save;
-      analytics.track('trail_viewed', { levels_completed: completedCount(s), total_stars: totalStars(s) });
-    }, []),
-  );
 
   return (
     <Screen>
       <View style={[styles.header, { borderBottomColor: palette.border, borderBottomWidth: borderWidth }]}>
-        <CampusEmblem campus={campus} size={52} />
-        <View style={{ flex: 1 }}>
-          <AppText
-            variant="heading"
-            accessibilityRole="header"
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.75}
-          >
+        <CampusEmblem campus={campus} size={44} />
+        <View style={styles.flex}>
+          <AppText variant="bodyLarge" accessibilityRole="header" style={styles.title}>
             Championship Trail
           </AppText>
-          <AppText variant="caption" muted>
-            {campus.name} · {campus.rallyCry}
+          <AppText variant="caption" muted numberOfLines={1}>
+            {campus.name}
           </AppText>
-        </View>
-        <View
-          style={styles.starTotal}
-          accessible
-          accessibilityLabel={`${stars} of ${LEVELS.length * 3} stars earned`}
-        >
-          <Stars count={1} size={18} />
-          <AppText variant="label">{stars}</AppText>
+          <View
+            style={styles.starTotal}
+            accessible
+            accessibilityLabel={`${stars} of ${TRAIL_STOPS.length * 3} stars earned`}
+          >
+            <StarIcon filled size={16} />
+            <AppText variant="caption">
+              {stars} / {TRAIL_STOPS.length * 3}
+            </AppText>
+          </View>
         </View>
         <IconButton
           icon="settings"
@@ -85,47 +60,33 @@ export default function TrailScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
         <View
+          testID="daily-card"
+          accessible
+          accessibilityLabel="Daily Challenge. Coming soon."
           style={[
             styles.daily,
-            {
-              backgroundColor: palette.surface,
-              borderColor: palette.accent,
-              borderWidth: Math.max(2, borderWidth),
-            },
+            { backgroundColor: palette.surface, borderColor: palette.border, borderWidth },
           ]}
         >
           <View style={styles.dailyTop}>
-            <AppText variant="bodyLarge">Daily Practice</AppText>
+            <AppText variant="bodyLarge">Daily Challenge</AppText>
             <View
-              style={styles.streak}
-              accessible
-              accessibilityLabel={`Daily streak: ${streak} ${streak === 1 ? 'day' : 'days'}`}
+              style={[styles.badge, { backgroundColor: palette.surfaceRaised, borderColor: palette.accent }]}
             >
-              <Icon name="flame" size={20} color={palette.primary} />
-              <AppText variant="label">{streak}</AppText>
+              <AppText variant="caption" color={palette.accent} style={styles.badgeText}>
+                Coming Soon
+              </AppText>
             </View>
           </View>
           <AppText variant="caption" muted>
-            A fresh, date-seeded board of a level you&apos;ve already beaten. Practice only — daily rewards
-            are coming soon.
+            A fresh puzzle every day with streak tracking. Not available in this build.
           </AppText>
-          <Button
-            label={dailyDone ? 'Practice again' : "Play today's practice"}
-            variant="secondary"
-            onPress={() =>
-              router.push({
-                pathname: '/play/[id]',
-                params: { id: daily.levelId, mode: 'daily', seed: String(daily.seed) },
-              })
-            }
-            testID="daily-practice"
-          />
         </View>
 
-        {LEVELS.map((level, index) => {
-          const progress = getProgress(save, level.id);
-          const unlocked = isLevelUnlocked(save, level.id, LEVEL_ORDER);
-          const isCurrent = level.id === current && unlocked && !progress.completed;
+        {TRAIL_STOPS.map((stop, index) => {
+          const progress = getProgress(save, stop.id);
+          const unlocked = isLevelUnlocked(save, stop.id, LEVEL_ORDER);
+          const isCurrent = stop.id === current && unlocked && !progress.completed;
           const offset = WIND[index % WIND.length] ?? 0;
           const status = progress.completed
             ? `completed, ${progress.stars} of 3 stars`
@@ -133,7 +94,7 @@ export default function TrailScreen() {
               ? 'ready to play'
               : 'locked';
           return (
-            <View key={level.id} style={styles.nodeRow}>
+            <View key={stop.id} style={styles.nodeRow}>
               {index > 0 && (
                 <View
                   style={[styles.connector, { backgroundColor: unlocked ? palette.accent : palette.border }]}
@@ -141,15 +102,15 @@ export default function TrailScreen() {
               )}
               <View style={{ transform: [{ translateX: offset * swing }], alignItems: 'center' }}>
                 <Pressable
-                  testID={`trail-${level.id}`}
+                  testID={`trail-${stop.id}`}
                   accessibilityRole="button"
-                  accessibilityLabel={`Level ${level.levelNumber}, ${level.title}, ${status}`}
+                  accessibilityLabel={`Level ${stop.levelNumber}, ${stop.title}, ${status}`}
                   accessibilityHint={
-                    unlocked ? 'Opens the level details' : `Complete level ${level.levelNumber - 1} to unlock`
+                    unlocked ? 'Opens the level' : `Complete level ${stop.levelNumber - 1} to unlock`
                   }
                   accessibilityState={{ disabled: !unlocked }}
                   disabled={!unlocked}
-                  onPress={() => router.push({ pathname: '/level/[id]', params: { id: level.id } })}
+                  onPress={() => router.push({ pathname: '/level/[id]', params: { id: stop.id } })}
                   style={({ pressed }) => [
                     styles.node,
                     {
@@ -173,14 +134,14 @@ export default function TrailScreen() {
                       variant="heading"
                       color={progress.completed ? campus.colors.onPrimary : palette.text}
                     >
-                      {level.levelNumber}
+                      {stop.levelNumber}
                     </AppText>
                   ) : (
                     <Icon name="lock" color={palette.locked} size={26} />
                   )}
                 </Pressable>
                 <AppText variant="caption" muted={!unlocked} style={styles.nodeLabel} align="center">
-                  {level.title}
+                  {stop.title}
                 </AppText>
                 {progress.completed ? (
                   <Stars count={progress.stars} size={18} />
@@ -193,7 +154,7 @@ export default function TrailScreen() {
             </View>
           );
         })}
-        <AppText variant="caption" muted align="center" style={{ marginTop: spacing.lg }}>
+        <AppText variant="caption" muted align="center" style={styles.more}>
           More stops on the Championship Trail are coming soon.
         </AppText>
       </ScrollView>
@@ -202,6 +163,8 @@ export default function TrailScreen() {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  title: { fontWeight: '800' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -210,10 +173,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   starTotal: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl * 2, alignItems: 'stretch' },
+  scroll: { padding: spacing.lg, paddingBottom: spacing.xxl * 2 },
   daily: { borderRadius: radius.lg, padding: spacing.lg, gap: spacing.sm, marginBottom: spacing.xl },
   dailyTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  streak: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  badge: { borderRadius: radius.pill, borderWidth: 1, paddingHorizontal: spacing.sm, paddingVertical: 2 },
+  badgeText: { fontWeight: '700' },
   nodeRow: { alignItems: 'center' },
   connector: { width: 6, height: 26, borderRadius: 3, marginVertical: 4 },
   node: {
@@ -224,4 +188,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   nodeLabel: { marginTop: 4, maxWidth: LABEL_WIDTH },
+  more: { marginTop: spacing.lg },
 });

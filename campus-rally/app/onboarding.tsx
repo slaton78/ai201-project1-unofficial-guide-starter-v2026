@@ -1,75 +1,28 @@
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { BrandLogo } from '@/components/BrandMark';
 import { Button } from '@/components/Button';
-import { CampusEmblem } from '@/components/CampusEmblem';
 import { Screen } from '@/components/Screen';
-import { Stars } from '@/components/Stars';
-import { TokenGlyph } from '@/components/TokenGlyph';
-import { CAMPUSES } from '@/content/campuses';
-import { TOKEN_COLORS } from '@/game/core/types';
-import { analytics } from '@/services/analytics';
+import { ONBOARDING_SLIDES } from '@/features/onboarding/slides';
+import type { OnboardingSlide } from '@/features/onboarding/slides';
 import { useGameStore } from '@/store/gameStore';
 import { radius, spacing, useTheme } from '@/theme';
-
-interface Slide {
-  title: string;
-  body: string;
-  art: React.ReactNode;
-}
-
-const SLIDES: Slide[] = [
-  {
-    title: 'Match tokens. Build momentum.',
-    body: 'Swipe a token into a neighbor to line up 3 or more of the same shape. Bigger matches create Rally boosters.',
-    art: (
-      <View
-        style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, maxWidth: 260 }}
-      >
-        {TOKEN_COLORS.map((color) => (
-          <TokenGlyph key={color} color={color} size={52} />
-        ))}
-      </View>
-    ),
-  },
-  {
-    title: 'Clear objectives. Earn stars.',
-    body: 'Each level has a goal and a move limit. Finish the goal to win, score high for up to 3 stars, and unlock the next stop on the Championship Trail.',
-    art: <Stars count={3} size={64} />,
-  },
-  {
-    title: 'Choose your fan identity.',
-    body: 'Pick one of five fictional campus fan crews. It’s just for style — you can switch anytime.',
-    art: (
-      <View style={{ flexDirection: 'row', gap: 6 }}>
-        {CAMPUSES.map((campus) => (
-          <CampusEmblem key={campus.id} campus={campus} size={52} />
-        ))}
-      </View>
-    ),
-  },
-];
 
 export default function OnboardingScreen() {
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const completeOnboarding = useGameStore((s) => s.completeOnboarding);
   const { palette, borderWidth } = useTheme();
-  const slide = SLIDES[index] as Slide;
-  const last = index === SLIDES.length - 1;
+  const slide = ONBOARDING_SLIDES[index] as OnboardingSlide;
+  const last = index === ONBOARDING_SLIDES.length - 1;
 
-  useEffect(() => {
-    analytics.track('onboarding_started', {});
-  }, []);
-
-  const finish = async (skipped: boolean) => {
+  const finish = async () => {
     setBusy(true);
     try {
       await completeOnboarding();
-      analytics.track('onboarding_completed', { skipped });
       router.replace({ pathname: '/campus-select', params: { from: 'onboarding' } });
     } finally {
       setBusy(false);
@@ -83,7 +36,7 @@ export default function OnboardingScreen() {
         <Button
           label="Skip"
           variant="ghost"
-          onPress={() => void finish(true)}
+          onPress={() => void finish()}
           accessibilityHint="Skips the introduction"
           testID="onboarding-skip"
         />
@@ -109,8 +62,12 @@ export default function OnboardingScreen() {
       </View>
 
       <View style={styles.footer}>
-        <View style={styles.dots} accessible accessibilityLabel={`Step ${index + 1} of ${SLIDES.length}`}>
-          {SLIDES.map((s, i) => (
+        <View
+          style={styles.dots}
+          accessible
+          accessibilityLabel={`Step ${index + 1} of ${ONBOARDING_SLIDES.length}`}
+        >
+          {ONBOARDING_SLIDES.map((s, i) => (
             <View
               key={s.title}
               style={[
@@ -125,7 +82,7 @@ export default function OnboardingScreen() {
         </View>
         <Button
           label={last ? 'Choose my campus' : 'Continue'}
-          onPress={() => (last ? void finish(false) : setIndex(index + 1))}
+          onPress={() => (last ? void finish() : setIndex(index + 1))}
           busy={busy}
           testID="onboarding-continue"
         />

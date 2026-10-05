@@ -11,29 +11,35 @@ import { IconButton } from '@/components/IconButton';
 import { Screen } from '@/components/Screen';
 import { SettingRow } from '@/components/SettingRow';
 import { getCampus } from '@/content/campuses';
-import { analytics } from '@/services/analytics';
-import { triggerHaptic } from '@/services/haptics';
 import { useGameStore } from '@/store/gameStore';
 import { radius, spacing, useTheme } from '@/theme';
 import type { PlayerSettings } from '@/types/save';
 
 const TOGGLES: { key: keyof PlayerSettings; label: string; description: string }[] = [
-  { key: 'musicEnabled', label: 'Music', description: 'Background music loop.' },
-  { key: 'sfxEnabled', label: 'Sound effects', description: 'Swaps, matches, and win/loss sounds.' },
+  {
+    key: 'musicEnabled',
+    label: 'Music',
+    description: 'Background music. Saved now; plays once audio is added.',
+  },
+  {
+    key: 'sfxEnabled',
+    label: 'Sound effects',
+    description: 'Game sounds. Saved now; plays once audio is added.',
+  },
   {
     key: 'hapticsEnabled',
     label: 'Haptic feedback',
-    description: 'Vibration on matches and boosters (supported devices).',
+    description: 'Vibration on supported devices. Saved now; used once gameplay is added.',
   },
   {
     key: 'reduceMotionEnabled',
     label: 'Reduce motion',
-    description: 'Shorter animations, no shakes, bounces or pulsing hints.',
+    description: 'Turns off screen transition animations.',
   },
   {
     key: 'highContrastEnabled',
     label: 'High contrast',
-    description: 'Black background, white text, bolder outlines on tokens.',
+    description: 'Black background, white text and bolder outlines.',
   },
 ];
 
@@ -50,15 +56,12 @@ export default function SettingsScreen() {
 
   const toggle = (key: keyof PlayerSettings, value: boolean) => {
     void updateSettings({ [key]: value });
-    analytics.track('settings_changed', { setting: key, enabled: value });
-    if (key === 'hapticsEnabled' && value) triggerHaptic('selection');
   };
 
   const reset = async () => {
     setResetting(true);
     try {
       await resetLocalData();
-      analytics.track('local_data_reset', {});
       setConfirmVisible(false);
       router.dismissAll();
       router.replace('/onboarding');

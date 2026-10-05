@@ -1,57 +1,42 @@
 import { create } from 'zustand';
 
-import { newlyEarnedBadges } from '@/content/badges';
-import type { FanBadge } from '@/content/badges';
-import { LEVEL_ORDER } from '@/content/levels';
 import { createDefaultSave } from '@/features/persistence/migrations';
-import {
-  applyLevelResult,
-  recordAttemptStart,
-  recordDailyPractice,
-} from '@/features/progression/progression';
-import type { LevelResult } from '@/features/progression/progression';
+import { logError } from '@/lib/logger';
 import { createGameRepository } from '@/repositories';
 import type { GameRepository } from '@/repositories';
-import { errorReporter } from '@/services/errorReporting';
 import type { GameSave, PlayerSettings } from '@/types/save';
 
-export interface RecordedResult {
-  firstCompletion: boolean;
-  newBestScore: boolean;
-  unlockedLevelId: string | null;
-  newBadges: FanBadge[];
-}
-
-interface GameStoreState {
+export interface GameStoreState {
   hydrated: boolean;
-  /** True on the very first launch (no save existed before this session). */
+  /** True when no completed onboarding was found at startup. */
   firstLaunch: boolean;
   save: GameSave;
   hydrate(): Promise<void>;
   completeOnboarding(): Promise<void>;
   selectCampus(campusId: string): Promise<void>;
   updateSettings(partial: Partial<PlayerSettings>): Promise<void>;
-  startAttempt(levelId: string): Promise<number>;
-  recordLevelResult(result: LevelResult): Promise<RecordedResult>;
-  recordDailyWin(today: Date): Promise<void>;
   resetLocalData(): Promise<void>;
 }
 
-let repository: GameRepository = createGameRepository();
+let repository: GameRepository | null = null;
+const getRepository = (): GameRepository => (repository ??= createGameRepository());
 
-/** Test/DI hook: swap the persistence implementation (e.g. an in-memory repository). */
+/** Dependency-injection hook (tests, future sync): swap the persistence implementation. */
 export function setGameRepository(next: GameRepository): void {
   repository = next;
 }
 
+/**
+ * App-level state. The whole save lives in memory; every action builds a new save, updates the
+ * UI immediately, then awaits the repository write (writes are serialized by the repository).
+ */
 export const useGameStore = create<GameStoreState>()((set, get) => {
-  /** Updates memory first (UI stays responsive), then persists. Rejects if the write fails. */
   const commit = async (save: GameSave): Promise<void> => {
     set({ save });
     try {
-      await repository.save(save);
+      await getRepository().save(save);
     } catch (error) {
-      errorReporter.captureException(error, { area: 'persistence' });
+      logError('persistence', error);
       throw error;
     }
   };
@@ -64,10 +49,10 @@ export const useGameStore = create<GameStoreState>()((set, get) => {
     async hydrate() {
       if (get().hydrated) return;
       try {
-        const save = await repository.load();
+        const save = await getRepository().load();
         set({ save, hydrated: true, firstLaunch: !save.playerProfile.onboardingCompleted });
       } catch (error) {
-        errorReporter.captureException(error, { area: 'persistence', extra: { phase: 'hydrate' } });
+        logError('persistence', error);
         set({ hydrated: true, firstLaunch: true });
       }
     },
@@ -86,40 +71,13 @@ export const useGameStore = create<GameStoreState>()((set, get) => {
       const { save } = get();
       await commit({
         ...save,
-        playerProfile: {
-          ...save.playerProfile,
-          settings: { ...save.playerProfile.settings, ...partial },
-        },
+        playerProfile: { ...save.playerProfile, settings: { ...save.playerProfile.settings, ...partial } },
       });
     },
 
-    async startAttempt(levelId) {
-      const next = recordAttemptStart(get().save, levelId);
-      await commit(next);
-      return next.levelProgressById[levelId]?.attempts ?? 1;
-    },
-
-    async recordLevelResult(result) {
-      const before = get().save;
-      const applied = applyLevelResult(before, result, LEVEL_ORDER);
-      await commit(applied.save);
-      return {
-        firstCompletion: applied.firstCompletion,
-        newBestScore: applied.newBestScore,
-        unlockedLevelId: applied.unlockedLevelId,
-        newBadges: newlyEarnedBadges(before, applied.save),
-      };
-    },
-
-    async recordDailyWin(today) {
-      await commit(recordDailyPractice(get().save, today));
-    },
-
     async resetLocalData() {
-      const fresh = await repository.reset();
+      const fresh = await getRepository().reset();
       set({ save: fresh, firstLaunch: true });
     },
   };
 });
-
-export const selectSettings = (state: GameStoreState): PlayerSettings => state.save.playerProfile.settings;

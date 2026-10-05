@@ -6,8 +6,9 @@ import { LocalGameRepository } from './LocalGameRepository';
 export type { GameRepository, KeyValueStore } from './GameRepository';
 
 /**
- * The MVP always uses local persistence. When Supabase sync ships, this factory is the single
- * place that decides which repository (or a local-first syncing composite) to use.
+ * The single place that decides which persistence implementation the app uses. Today it is
+ * always device-local; a remote-sync implementation can be introduced here later without
+ * touching screens or the store.
  */
 export function createGameRepository(): GameRepository {
   return new LocalGameRepository(AsyncStorage);

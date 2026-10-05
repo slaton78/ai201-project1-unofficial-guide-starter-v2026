@@ -7,7 +7,7 @@ module.exports = defineConfig([
   expoConfig,
   prettierConfig,
   {
-    ignores: ['dist/*', 'web-build/*', '.expo/*', 'src/game/phaser/generated/*', 'coverage/*'],
+    ignores: ['dist/*', 'web-build/*', '.expo/*', 'coverage/*'],
   },
   {
     files: ['**/*.ts', '**/*.tsx'],
@@ -26,29 +26,14 @@ module.exports = defineConfig([
     },
   },
   {
-    files: ['src/game/core/**/*.ts', 'src/game/shared/**/*.ts'],
+    // Pure modules must stay free of UI/platform imports so they remain unit-testable in Node.
+    files: ['src/features/persistence/**/*.ts', 'src/features/progression/**/*.ts', 'src/types/**/*.ts'],
     rules: {
-      // The rules engine must stay framework-agnostic (shared by React Native and Phaser).
       'no-restricted-imports': [
         'error',
-        {
-          patterns: [
-            'react',
-            'react-native',
-            'react-native/*',
-            'expo-*',
-            'phaser',
-            '@/services/*',
-            '@/store/*',
-          ],
-        },
+        { patterns: ['react', 'react-native', 'react-native/*', 'expo-*', '@/store/*', '@/components/*'] },
       ],
     },
-  },
-  {
-    // Phaser's ESM default export is the conventional entry point.
-    files: ['src/game/phaser/**/*.ts'],
-    rules: { 'import/no-named-as-default-member': 'off' },
   },
   {
     files: ['scripts/**/*.mjs'],

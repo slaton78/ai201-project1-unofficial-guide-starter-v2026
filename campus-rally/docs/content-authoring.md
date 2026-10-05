@@ -1,15 +1,37 @@
 # Content authoring
 
-## Adding or editing a level
+Content is data, kept in `src/content/`. Screens never hard-code campus or trail details.
 
-1. Copy an existing file in `src/content/levels/` to `level-011.json` (ids are `level-NNN`).
-2. Import it in `src/content/levels/index.ts` and append it to `RAW_LEVELS` (array order = trail order).
-3. Run `npm test` — `tests/content.test.ts` validates the schema and checks every objective is achievable on the layout.
-4. Run `npm run simulate:levels` to see bot win rate and score percentiles, and tune `moveLimit` and `starThresholds`.
+## Campuses
 
-The game scales to 60+ levels without code changes: the trail renders `LEVELS`, unlocks follow array order, and every rule is data-driven. For large catalogs, split levels by `chapterId` and (later) serve them from the `levels` table.
+Edit `src/content/campuses.ts` only. Each campus needs an `id`, `name`, `rallyCry`, `description`, `emblem` (`fox | comet | owl | spark | pilot`), and colors (`primary`, `secondary`, `onPrimary` with readable contrast). Keep identities fictional — no real school names, mascots, or color pairings that unmistakably identify a real school.
 
-## Level JSON reference
+## Championship Trail stops (Phase A)
+
+`src/content/trail.ts` lists the stops shown on the trail: `id` (`level-NNN`, the same id the save
+uses in `levelProgressById`), `levelNumber`, and `title`. To add a stop, append a title to `TITLES`;
+ids and numbers are derived. `tests/content.test.ts` checks the list.
+
+## Levels (planned for Phase C — not implemented yet)
+
+Playable levels will be JSON files in `src/content/levels/level-NNN.json`, one per trail stop,
+validated by a schema and by content tests that check every objective is achievable. The game
+should scale to 60+ levels with no code changes. Target curve for the first ten:
+
+| Level             | Goal                     | Moves | Introduces                     |
+| ----------------- | ------------------------ | ----- | ------------------------------ |
+| 1 Opening Whistle | Make 5 matches           | 12    | Swapping (tutorial)            |
+| 2 Tile Time       | Clear 20 Rally Tiles     | 18    | Rally Tiles (tutorial)         |
+| 3 Score Surge     | Earn 1,500 points        | 18    | Cascades & score (tutorial)    |
+| 4 Penalty Box     | Clear 8 Penalty Blocks   | 20    | Penalty Blocks                 |
+| 5 Line Rally      | Clear Rally Tiles        | 20    | Line Rally combo               |
+| 6 Green Wave      | Collect 18 Victory Green | ~18   | Collect objective              |
+| 7 Locked In       | Unlock Locked Tokens     | ~20   | Locked Tokens                  |
+| 8 Mixed Signals   | Blocks + score           | ~20   | Mixed objective, Double blocks |
+| 9 Campus Burst    | Clear Rally Tiles        | ~20   | Campus Burst                   |
+| 10 Rivalry Rush   | Two objectives           | ~25   | Milestone level                |
+
+### Level JSON reference (planned)
 
 ```jsonc
 {
@@ -69,27 +91,6 @@ The game scales to 60+ levels without code changes: the trail renders `LEVELS`, 
 | `unlockTokens`       | —            | Locked Tokens unlocked (≤ locked tokens in layout)         |
 
 Token types: `red` Rally Red (circle), `blue` Spirit Blue (diamond), `gold` Gold Star (star), `green` Victory Green (triangle), `purple` Spark Purple (hexagon), `orange` Momentum Orange (square).
-
-## Current difficulty curve (bot win rate, `npm run simulate:levels`)
-
-| Level             | Goal                     | Moves | Introduces                         | Bot win % (approx.) |
-| ----------------- | ------------------------ | ----- | ---------------------------------- | ------------------- |
-| 1 Opening Whistle | Make 5 matches           | 12    | Swapping (tutorial, 4 token types) | 100                 |
-| 2 Tile Time       | Clear 20 Rally Tiles     | 18    | Rally Tiles (tutorial)             | ~100                |
-| 3 Score Surge     | Earn 1,500 points        | 18    | Cascades & score (tutorial)        | 100                 |
-| 4 Penalty Box     | Clear 8 Penalty Blocks   | 20    | Penalty Blocks, gravity stops      | 100                 |
-| 5 Line Rally      | Clear 14 Rally Tiles     | 20    | Line Rally combo + tray booster    | ~75                 |
-| 6 Green Wave      | Collect 18 Victory Green | 16    | Collect objective                  | ~98                 |
-| 7 Locked In       | Unlock 8 Locked Tokens   | 18    | Locked Tokens                      | ~90                 |
-| 8 Mixed Signals   | 8 blocks + 4,000 pts     | 20    | Double blocks, Color Rally         | ~85                 |
-| 9 Campus Burst    | Clear 30 Rally Tiles     | 18    | Campus Burst                       | ~100                |
-| 10 Rivalry Rush   | 8 blocks + 16 Gold Star  | 25    | Milestone: all boosters, 6 types   | ~88                 |
-
-The bot is greedy and ignores long-term strategy; treat these as floors, and validate with playtests.
-
-## Campuses
-
-Edit `src/content/campuses.ts` only. Each campus needs an `id`, `name`, `rallyCry`, `description`, `emblem` (`fox | comet | owl | spark | pilot`), and colors (`primary`, `secondary`, `onPrimary` with readable contrast). Keep identities fictional — no real school names, mascots, or color pairings that unmistakably identify a real school.
 
 ## Copy guidelines
 

@@ -1,0 +1,50 @@
+name: Campus Rally CI
+
+on:
+  push:
+    paths:
+      - 'campus-rally/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    paths:
+      - 'campus-rally/**'
+      - '.github/workflows/ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: campus-rally
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: campus-rally/package-lock.json
+
+      # postinstall also builds the Phaser WebView bundle (src/game/phaser/generated).
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test

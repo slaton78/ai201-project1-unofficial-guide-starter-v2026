@@ -1,0 +1,36 @@
+{
+  "id": "level-006",
+  "chapterId": "chapter-01-opening-season",
+  "levelNumber": 6,
+  "title": "Green Wave",
+  "board": {
+    "width": 8,
+    "height": 8
+  },
+  "tokenTypes": ["red", "blue", "gold", "green", "purple"],
+  "moveLimit": 16,
+  "objectives": [
+    {
+      "type": "collectTokens",
+      "color": "green",
+      "target": 18
+    }
+  ],
+  "boosters": {
+    "unlocked": ["lineRally"],
+    "starting": {
+      "lineRally": 1
+    },
+    "recommended": "lineRally"
+  },
+  "starThresholds": [4000, 8800, 12500],
+  "tutorial": {
+    "tips": ["Collect 18 Victory Green tokens (triangles) by matching them."],
+    "hintDelaySeconds": 15
+  },
+  "theme": {
+    "name": "Green Wave",
+    "backdrop": "dawn",
+    "accentColor": "#5DD39E"
+  }
+}

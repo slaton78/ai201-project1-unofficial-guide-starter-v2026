@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Campus Rally",
+    "slug": "campus-rally",
+    "version": "0.1.0",
+    "scheme": "campusrally",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B1630",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.example.campusrally",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.example.campusrally",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1630",
+        "foregroundImage": "./assets/images/adaptive-icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-audio",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#0B1630"
+        }
+      ]
+    ]
+  }
+}

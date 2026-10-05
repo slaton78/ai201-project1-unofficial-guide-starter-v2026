@@ -1,0 +1,39 @@
+{
+  "id": "level-009",
+  "chapterId": "chapter-01-opening-season",
+  "levelNumber": 9,
+  "title": "Campus Burst",
+  "board": {
+    "width": 8,
+    "height": 8,
+    "layout": ["........", "..TTTT..", ".TTTTTT.", ".TTTTTT.", ".TTTTTT.", ".TTTTTT.", "..TTTT..", "........"]
+  },
+  "tokenTypes": ["red", "blue", "gold", "green", "purple"],
+  "moveLimit": 18,
+  "objectives": [
+    {
+      "type": "clearRallyTiles",
+      "target": 30
+    }
+  ],
+  "boosters": {
+    "unlocked": ["lineRally", "campusBurst", "colorRally"],
+    "starting": {
+      "campusBurst": 1
+    },
+    "recommended": "campusBurst"
+  },
+  "starThresholds": [5000, 10500, 14500],
+  "tutorial": {
+    "tips": [
+      "New: match in a T or L shape to create a Campus Burst.",
+      "A Campus Burst clears the 3\u00d73 area around it."
+    ],
+    "hintDelaySeconds": 15
+  },
+  "theme": {
+    "name": "Bonfire Night",
+    "backdrop": "night",
+    "accentColor": "#FFC94A"
+  }
+}

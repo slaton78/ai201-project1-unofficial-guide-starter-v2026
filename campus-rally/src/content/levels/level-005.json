@@ -1,0 +1,40 @@
+{
+  "id": "level-005",
+  "chapterId": "chapter-01-opening-season",
+  "levelNumber": 5,
+  "title": "Line Rally",
+  "board": {
+    "width": 8,
+    "height": 8,
+    "layout": ["TTTTTTTT", "........", "........", "........", "........", "........", "........", "TTTTTTTT"]
+  },
+  "tokenTypes": ["red", "blue", "gold", "green", "purple"],
+  "moveLimit": 20,
+  "objectives": [
+    {
+      "type": "clearRallyTiles",
+      "target": 14
+    }
+  ],
+  "boosters": {
+    "unlocked": ["lineRally"],
+    "starting": {
+      "lineRally": 1
+    },
+    "recommended": "lineRally"
+  },
+  "starThresholds": [5000, 13000, 19500],
+  "tutorial": {
+    "tips": [
+      "New: match 4 in a line to create a Line Rally token (striped).",
+      "Clear a Line Rally to sweep its whole row or column.",
+      "Tap the Line Rally booster, then a token, to clear that row."
+    ],
+    "hintDelaySeconds": 12
+  },
+  "theme": {
+    "name": "Sideline Sprint",
+    "backdrop": "dusk",
+    "accentColor": "#7CC4F0"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "id": "level-004",
+  "chapterId": "chapter-01-opening-season",
+  "levelNumber": 4,
+  "title": "Penalty Box",
+  "board": {
+    "width": 8,
+    "height": 8,
+    "layout": ["........", ".#....#.", "........", "..#..#..", "...##...", "..#..#..", "........", ".#....#."]
+  },
+  "tokenTypes": ["red", "blue", "gold", "green", "purple"],
+  "moveLimit": 20,
+  "objectives": [
+    {
+      "type": "clearPenaltyBlocks",
+      "target": 8
+    }
+  ],
+  "boosters": {
+    "unlocked": [],
+    "starting": {}
+  },
+  "starThresholds": [3000, 5600, 8000],
+  "tutorial": {
+    "tips": [
+      "Penalty Blocks can't move. Make a match right next to one to break it.",
+      "Tokens can't fall through blocks \u2014 new tokens appear just below them."
+    ],
+    "hintDelaySeconds": 12
+  },
+  "theme": {
+    "name": "Penalty Box",
+    "backdrop": "night",
+    "accentColor": "#FF6B6B"
+  }
+}

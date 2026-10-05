@@ -1,0 +1,38 @@
+{
+  "id": "level-007",
+  "chapterId": "chapter-01-opening-season",
+  "levelNumber": 7,
+  "title": "Locked In",
+  "board": {
+    "width": 8,
+    "height": 8,
+    "layout": ["........", "........", "..L..L..", ".L.LL.L.", "........", "..L..L..", "...LL...", "........"]
+  },
+  "tokenTypes": ["red", "blue", "gold", "green", "purple"],
+  "moveLimit": 18,
+  "objectives": [
+    {
+      "type": "unlockTokens",
+      "target": 8
+    }
+  ],
+  "boosters": {
+    "unlocked": ["lineRally"],
+    "starting": {
+      "lineRally": 1
+    }
+  },
+  "starThresholds": [4000, 8000, 13000],
+  "tutorial": {
+    "tips": [
+      "New: Locked Tokens (with a padlock) can't be swapped.",
+      "Include a Locked Token in a match to unlock it."
+    ],
+    "hintDelaySeconds": 15
+  },
+  "theme": {
+    "name": "Locker Room",
+    "backdrop": "night",
+    "accentColor": "#B794F4"
+  }
+}
